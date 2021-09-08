@@ -5,16 +5,16 @@ import {
   HttpStatus,
   Post,
   Render,
-  Res,
+  Res
 } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
-  ApiUnprocessableEntityResponse,
+  ApiUnprocessableEntityResponse
 } from '@nestjs/swagger';
-import { RegisterDTO } from './dto/register.dto';
 import express from 'express';
+import { RegisterDTO } from './dto/register.dto';
 
 @Controller('auth')
 @ApiTags('oauth')
@@ -34,4 +34,9 @@ export class AuthController {
     @Res() res: express.Response,
   ) {}
 
+  @Get()
+  @Render('pages')
+  root() {
+    
+  }
 }

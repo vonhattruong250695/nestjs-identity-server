@@ -1,17 +1,15 @@
-import 'dotenv/config';
-import * as cookieParser from 'cookie-parser';
-import { NestFactory } from '@nestjs/core';
-
 import {
   Logger,
   RequestMethod,
   ValidationPipe,
-  VersioningType,
+  VersioningType
 } from '@nestjs/common';
-import { AppModule } from './app.module';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
+import 'dotenv/config';
 import { AppNest } from './app.model';
-import { join } from 'path';
+import { AppModule } from './app.module';
 
 const NOOP = () => null;
 
@@ -24,12 +22,9 @@ async function bootstrap() {
         path: 'oauth2/token',
         method: RequestMethod.GET,
       },
-      {
-        path: 'auth',
-        method: RequestMethod.GET,
-      },
     ],
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -52,9 +47,6 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
-
-  app.useStaticAssets(join(__dirname, '..', 'public'));
-  app.setViewEngine('ejs');
 
   const document = SwaggerModule.createDocument(app, options);
 
