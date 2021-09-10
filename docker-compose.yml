@@ -6,12 +6,29 @@ version: '3.6'
 # sudo docker-compose build
 # sudo docker-compose up
 
-
 services:
+  # postgresql-db:
+  #   image: postgres:11-alpine
+  #   environment:
+  #     - POSTGRES_DB=argo
+  #     - POSTGRES_USER=argo
+  #     - POSTGRES_PASSWORD=secret
+  #   volumes:
+  #     - ./db-data:/var/lib/postgresql/data
+  #   ports:
+  #     - 5432:5432
+
   mongodb:
     image: mongo:4.2.3-bionic
+    # command: mongod --port 27018
+    # ports:
+    #   - 27017:27017
+    # networks:
+    # - myapp
+    command: mongod --port 27018
     ports:
-      - 27018:27018
+      - '27018:27018'
+
   redis:
     image: redis:alpine
     ports:

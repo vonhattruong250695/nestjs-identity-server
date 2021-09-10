@@ -10,6 +10,11 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@oauth2/*": ["src/oauth2/*"], 
+      "@auth/*": ["src/auth/*"], 
+      "@shared/*": ["src/shared/*"], 
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,

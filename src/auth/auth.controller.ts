@@ -1,42 +1,52 @@
+import { RegisterDTO } from '@auth/dto/register.dto';
+import { AuthService } from '@auth/services/auth.service';
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
-  Get,
   HttpStatus,
   Post,
-  Render,
-  Res
+  Res,
+  UseInterceptors
 } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import * as swagger from '@nestjs/swagger';
 import {
-  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiOperation,
-  ApiTags,
   ApiUnprocessableEntityResponse
 } from '@nestjs/swagger';
 import express from 'express';
-import { RegisterDTO } from './dto/register.dto';
+import { Model } from 'mongoose';
+import { UserModel } from './schema/user.schema';
 
 @Controller('auth')
-@ApiTags('oauth')
+@swagger.ApiTags('auth')
 export class AuthController {
-  @Post('register')
-  @ApiOperation({ summary: 'User register' })
-  @ApiUnprocessableEntityResponse({
-    status: HttpStatus.NOT_MODIFIED,
-    description: 'Successful created user',
-  })
-  @ApiOkResponse({
-    description: 'Failed created',
-    status: HttpStatus.CREATED,
-  })
-  async register(
-    @Body() registerDto: RegisterDTO,
-    @Res() res: express.Response,
+  constructor(
+    private authService: AuthService,
+    @InjectModel(UserModel.name) public userModel: Model<UserModel>
   ) {}
 
-  @Get()
-  @Render('pages')
-  root() {
-    
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Post('register')
+  @ApiOperation({ summary: 'User register' })
+  @ApiNotFoundResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Client Not found'
+  })
+  @ApiUnprocessableEntityResponse({
+    status: HttpStatus.NOT_MODIFIED,
+    description: 'Failed created'
+  })
+  @ApiCreatedResponse({
+    description: 'Successful created user',
+    status: HttpStatus.CREATED
+  })
+  async register(@Body() registerDto: RegisterDTO, @Res() res: express.Response) {
+    const newUser = await this.authService.registerUser(registerDto);
+
+    return res.status(HttpStatus.CREATED).json(new this.userModel(newUser));
   }
 }

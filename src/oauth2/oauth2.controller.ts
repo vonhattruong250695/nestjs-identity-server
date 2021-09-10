@@ -1,19 +1,24 @@
-import { Controller, HttpStatus, Inject, Post, Req, Res } from '@nestjs/common';
-import { Oauth2Service } from './services/oauth2.service';
 import {
-  ApiBody,
-  ApiHeader,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
-import OAuth2Server from 'oauth2-server';
-import express from 'express';
+  Body,
+  Controller,
+  HttpStatus,
+  Inject,
+  Logger,
+  Post,
+  Req,
+  Res
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import express from 'express';
+import OAuth2Server from 'oauth2-server';
+import { NewClientDTO } from './dto/newClient.dto';
+import { Oauth2Service } from './services/oauth2.service';
 
 @ApiTags('oauth2')
 @Controller('oauth2')
 export class Oauth2Controller {
+  private logger = new Logger(Oauth2Controller.name);
   constructor(
     private oauth2Service: Oauth2Service,
     @Inject(REQUEST) private requestCtx: express.Request,
@@ -56,5 +61,28 @@ export class Oauth2Controller {
       await this.oauth2Service.handleToken(this.requestCtx, response);
 
     return response.json(HttpStatus.OK).json(tokenResult);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Success created client app',
+  })
+  @ApiResponse({
+    status: HttpStatus.FOUND,
+    description: 'The created client app has been existed',
+  })
+  @ApiOperation({ summary: 'Register new client' })
+  @Post('client')
+  async newClient(
+    @Body() newClientDTO: NewClientDTO,
+    @Res() req: express.Response,
+  ) {
+    const newClientApp = await this.oauth2Service.handleCreateNewClient(
+      newClientDTO,
+    );
+
+    this.logger.log(newClientApp);
+
+    return req.status(HttpStatus.CREATED).json(newClientApp);
   }
 }

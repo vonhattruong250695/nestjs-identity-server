@@ -15,7 +15,6 @@ const NOOP = () => null;
 
 async function bootstrap() {
   const app: AppNest = await NestFactory.create(AppModule);
-
   app.setGlobalPrefix('api', {
     exclude: [
       {
