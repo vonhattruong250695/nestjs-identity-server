@@ -1,13 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model, Types } from 'mongoose';
-import { ClientModelV2 } from '@oauth2/schema/client-v2.schema';
+import { ClientModel } from '@oauth2/schema/client.schema';
 import { NewClientDTO } from '@oauth2/dto/newClient.dto';
 import { Oauth2Error } from '@oauth2/constants/oauth2.error';
 
 @Injectable()
-export class ClientServiceV2 {
-  constructor(@InjectModel(ClientModelV2.name) private clientModelV2: Model<ClientModelV2>) {}
+export class ClientService {
+  constructor(@InjectModel(ClientModel.name) private clientModelV2: Model<ClientModel>) {}
 
   async findClientApp({
     clientId,
@@ -15,7 +15,7 @@ export class ClientServiceV2 {
   }: {
     clientId: string;
     clientSecret: string;
-  }): Promise<ClientModelV2 & { _id: Types.ObjectId }> {
+  }): Promise<ClientModel & { _id: Types.ObjectId }> {
     const clientApp = await this.clientModelV2.findOne({
       clientId,
       clientSecret
@@ -36,7 +36,7 @@ export class ClientServiceV2 {
     }
   }
 
-  async handleCreateNewClient(newClientDTO: NewClientDTO): Promise<LeanDocument<ClientModelV2>> {
+  async handleCreateNewClient(newClientDTO: NewClientDTO): Promise<LeanDocument<ClientModel>> {
     const clientAppDoc = new this.clientModelV2(newClientDTO);
 
     await clientAppDoc.save();

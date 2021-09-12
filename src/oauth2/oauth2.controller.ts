@@ -6,8 +6,8 @@ import { NewClientDTO } from './dto/newClient.dto';
 import { OAuth2TokenDTO } from './dto/oauth-token.dto';
 import { Oauth2Service } from './services/oauth2.service';
 import OAuth2Server from 'oauth2-server';
-import { ClientServiceV2 } from '@oauth2/services/client-v2.service';
-import { combineClientDataToTokenV2 } from '@oauth2/schema/client-v2.schema';
+import { ClientService } from '@oauth2/services/client.service';
+import { combineClientDataToTokenV2 } from '@oauth2/schema/client.schema';
 
 @ApiTags('oauth2')
 @Controller('oauth2')
@@ -15,7 +15,7 @@ export class Oauth2Controller {
   private logger = new Logger(Oauth2Controller.name);
   constructor(
     private oauth2Service: Oauth2Service,
-    private clientServiceV2: ClientServiceV2,
+    private clientServiceV2: ClientService,
     @Inject(REQUEST) private requestCtx: express.Request
   ) {}
 

@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { Document, SchemaTypes, Types } from 'mongoose';
 import { SocialLoginModel } from './social-login.schema';
-import { ClientModelV2 } from '@oauth2/schema/client-v2.schema';
+import { ClientModel } from '@oauth2/schema/client.schema';
 
 const SALT_LENGTH = 10;
 
@@ -25,7 +25,7 @@ export class UserModel extends Document {
   @Prop({ type: SchemaTypes.ObjectId, ref: SocialLoginModel.name })
   socialLogin: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: ClientModelV2.name })
+  @Prop({ type: SchemaTypes.ObjectId, ref: ClientModel.name })
   client: Types.ObjectId;
 
   public validatePassword(password): Promise<boolean> {

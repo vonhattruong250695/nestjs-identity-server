@@ -4,8 +4,8 @@ import express from 'express';
 import { LeanDocument } from 'mongoose';
 import { Oauth2ModelService } from './oauth2-model.service';
 import OAuth2Server = require('oauth2-server');
-import { ClientModelV2 } from '@oauth2/schema/client-v2.schema';
-import { ClientServiceV2 } from '@oauth2/services/client-v2.service';
+import { ClientModel } from '@oauth2/schema/client.schema';
+import { ClientService } from '@oauth2/services/client.service';
 
 @Injectable()
 export class Oauth2Service {
@@ -13,7 +13,7 @@ export class Oauth2Service {
   private logger = new Logger(Oauth2ModelService.name);
   constructor(
     private oauth2ModelService: Oauth2ModelService,
-    private clientServiceV2: ClientServiceV2
+    private clientServiceV2: ClientService
   ) {
     this.oauth2Server = new OAuth2Server({
       model: this.oauth2ModelService,
@@ -21,7 +21,7 @@ export class Oauth2Service {
     });
   }
 
-  async handleCreateNewClient(newClientDTO: NewClientDTO): Promise<LeanDocument<ClientModelV2>> {
+  async handleCreateNewClient(newClientDTO: NewClientDTO): Promise<LeanDocument<ClientModel>> {
     await this.clientServiceV2.checkClientAppExist(newClientDTO.clientId);
 
     return this.clientServiceV2.handleCreateNewClient(newClientDTO);

@@ -1,7 +1,7 @@
-import { ClientModelV2 } from '@oauth2/schema/client-v2.schema';
+import { ClientModel } from '@oauth2/schema/client.schema';
 import { LeanDocument } from 'mongoose';
 import { UserModel } from './../schema/user.schema';
 
 export class UserRegister extends UserModel {
-  clientInfo: LeanDocument<ClientModelV2>;
+  clientInfo: LeanDocument<ClientModel>;
 }

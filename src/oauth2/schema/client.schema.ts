@@ -25,7 +25,7 @@ export function hashClientSecret(clientSecret: string): string {
 }
 
 @Schema({ timestamps: true })
-export class ClientModelV2 extends Document {
+export class ClientModel extends Document {
   @Prop({ type: String, required: true, unique: true })
   clientId: string;
 
@@ -39,9 +39,9 @@ export class ClientModelV2 extends Document {
   redirectUris: [string];
 }
 
-export const ClientSchemaV2= SchemaFactory.createForClass(ClientModelV2);
+export const ClientSchema= SchemaFactory.createForClass(ClientModel);
 
-ClientSchemaV2.pre<ClientModelV2>('save', async function (next) {
+ClientSchema.pre<ClientModel>('save', async function (next) {
   this.clientId = hashClientId(this.clientId);
   this.clientSecret = hashClientSecret(this.clientSecret);
   next();

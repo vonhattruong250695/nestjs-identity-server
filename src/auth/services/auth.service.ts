@@ -4,14 +4,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
 import { RegisterDTO } from '../dto/register.dto';
 import { UserModel } from './../schema/user.schema';
-import { ClientServiceV2 } from '@oauth2/services/client-v2.service';
+import { ClientService } from '@oauth2/services/client.service';
 
 @Injectable()
 export class AuthService {
   private logger = new Logger(AuthService.name);
   constructor(
     @InjectModel(UserModel.name) public userModel: Model<UserModel>,
-    private clientServiceV2: ClientServiceV2
+    private clientServiceV2: ClientService
   ) {}
 
   async registerUser(createUserDto: RegisterDTO): Promise<LeanDocument<UserRegister>> {

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GrantsEnum } from '@oauth2/schema/client-v2.schema';
+import { GrantsEnum } from '@oauth2/schema/client.schema';
 import { IsEmail, IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 
 export class OAuth2TokenDTO {

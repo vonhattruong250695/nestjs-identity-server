@@ -1,7 +1,7 @@
 import { UserModel } from '@auth/schema/user.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { SchemaTypes, Types } from 'mongoose';
-import { ClientModelV2 } from '@oauth2/schema/client-v2.schema';
+import { ClientModel } from '@oauth2/schema/client.schema';
 
 @Schema({ timestamps: true })
 export class ClientTokenModel {
@@ -20,7 +20,7 @@ export class ClientTokenModel {
   @Prop({ type: Date, required: true })
   refreshTokenExpiresAt: Date;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: ClientModelV2.name })
+  @Prop({ type: SchemaTypes.ObjectId, ref: ClientModel.name })
   client: Types.ObjectId;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: UserModel.name })

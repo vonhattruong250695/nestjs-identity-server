@@ -37,7 +37,6 @@ async function bootstrap() {
     .setDescription('Nestjs identity server description')
     .setVersion('1.0')
     .addBearerAuth()
-    // .addSecurity()
     .build();
 
   app.enableVersioning({
