@@ -1,19 +1,13 @@
-import {
-  Body,
-  Controller,
-  HttpStatus,
-  Inject,
-  Logger,
-  Post,
-  Req,
-  Res
-} from '@nestjs/common';
+import { Body, Controller, HttpStatus, Inject, Logger, Post, Req, Res } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import express from 'express';
-import OAuth2Server from 'oauth2-server';
 import { NewClientDTO } from './dto/newClient.dto';
+import { OAuth2TokenDTO } from './dto/oauth-token.dto';
 import { Oauth2Service } from './services/oauth2.service';
+import OAuth2Server from 'oauth2-server';
+import { ClientServiceV2 } from '@oauth2/services/client-v2.service';
+import { combineClientDataToTokenV2 } from '@oauth2/schema/client-v2.schema';
 
 @ApiTags('oauth2')
 @Controller('oauth2')
@@ -21,65 +15,48 @@ export class Oauth2Controller {
   private logger = new Logger(Oauth2Controller.name);
   constructor(
     private oauth2Service: Oauth2Service,
-    @Inject(REQUEST) private requestCtx: express.Request,
+    private clientServiceV2: ClientServiceV2,
+    @Inject(REQUEST) private requestCtx: express.Request
   ) {}
 
   @ApiOperation({
     summary: 'Sign in',
-    description: 'Sign in with Oauth2',
+    description: 'Sign in with Oauth2'
   })
-  @ApiQuery({
-    name: 'grant_type',
-    enum: ['password', 'refresh_token', 'authorization_code'],
-  })
-  @ApiQuery({
-    name: 'username',
-    description: 'Email. If grant_type = password',
-    required: false,
-  })
-  @ApiQuery({
-    name: 'password',
-    description: 'If grant_type = password',
-    required: false,
-  })
-  @ApiQuery({
-    name: 'code',
-    description: 'If grant_type = authorization_code',
-    required: false,
-  })
-  @ApiQuery({
-    name: 'refresh_token',
-    description: 'If grant_type = refresh_token',
-    required: false,
-  })
+  @ApiConsumes('application/x-www-form-urlencoded')
   @Post('token')
   async token(
-    @Req() request: express.Request,
-    @Res() response: express.Response,
+    @Body() oauthTokenDTO: OAuth2TokenDTO,
+    @Req() req: express.Request,
+    @Res() res: express.Response
   ) {
-    const tokenResult: OAuth2Server.Token =
-      await this.oauth2Service.handleToken(this.requestCtx, response);
+    const { client_id, client_secret } = oauthTokenDTO;
 
-    return response.json(HttpStatus.OK).json(tokenResult);
+    await this.clientServiceV2.findClientApp({
+      clientId: oauthTokenDTO.client_id,
+      clientSecret: oauthTokenDTO.client_secret
+    });
+
+    req.headers.authorization = `Basic ${combineClientDataToTokenV2(client_id, client_secret)}`;
+    this.logger.debug(req.headers);
+
+    const tokenResult: OAuth2Server.Token = await this.oauth2Service.handleToken(req, res);
+
+    this.logger.log(tokenResult);
   }
 
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Success created client app',
+    description: 'Success created client app'
   })
   @ApiResponse({
     status: HttpStatus.FOUND,
-    description: 'The created client app has been existed',
+    description: 'The created client app has been existed'
   })
   @ApiOperation({ summary: 'Register new client' })
   @Post('client')
-  async newClient(
-    @Body() newClientDTO: NewClientDTO,
-    @Res() req: express.Response,
-  ) {
-    const newClientApp = await this.oauth2Service.handleCreateNewClient(
-      newClientDTO,
-    );
+  async newClient(@Body() newClientDTO: NewClientDTO, @Res() req: express.Response) {
+    const newClientApp = await this.oauth2Service.handleCreateNewClient(newClientDTO);
 
     this.logger.log(newClientApp);
 

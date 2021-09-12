@@ -1,9 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as CryptoJS from 'crypto-js';
+import { Document } from 'mongoose';
+
 export enum GrantsEnum {
   password = 'password',
   refresh_token = 'refresh_token',
   client_credentials = 'client_credentials'
+}
+
+export function combineClientDataToTokenV2(clientId: string, clientSecret: string) {
+  return Buffer.from(clientId + ':' + clientSecret).toString('base64');
 }
 
 export function hashClientId(clientId: string): string {
@@ -19,7 +25,7 @@ export function hashClientSecret(clientSecret: string): string {
 }
 
 @Schema({ timestamps: true })
-export class ClientModel {
+export class ClientModelV2 extends Document {
   @Prop({ type: String, required: true, unique: true })
   clientId: string;
 
@@ -33,9 +39,9 @@ export class ClientModel {
   redirectUris: [string];
 }
 
-export const ClientSchema = SchemaFactory.createForClass(ClientModel);
+export const ClientSchemaV2= SchemaFactory.createForClass(ClientModelV2);
 
-ClientSchema.pre<ClientModel>('save', async function (next) {
+ClientSchemaV2.pre<ClientModelV2>('save', async function (next) {
   this.clientId = hashClientId(this.clientId);
   this.clientSecret = hashClientSecret(this.clientSecret);
   next();

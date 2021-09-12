@@ -1,9 +1,4 @@
-import {
-  Logger,
-  RequestMethod,
-  ValidationPipe,
-  VersioningType
-} from '@nestjs/common';
+import { Logger, RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
@@ -19,9 +14,9 @@ async function bootstrap() {
     exclude: [
       {
         path: 'oauth2/token',
-        method: RequestMethod.GET,
-      },
-    ],
+        method: RequestMethod.POST
+      }
+    ]
   });
 
   app.useGlobalPipes(
@@ -30,10 +25,10 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       forbidUnknownValues: true,
       validationError: {
-        value: false,
+        value: false
       },
-      transform: true,
-    }),
+      transform: true
+    })
   );
   app.use(cookieParser());
 
@@ -41,10 +36,12 @@ async function bootstrap() {
     .setTitle('Nestjs identity server')
     .setDescription('Nestjs identity server description')
     .setVersion('1.0')
+    .addBearerAuth()
+    // .addSecurity()
     .build();
 
   app.enableVersioning({
-    type: VersioningType.URI,
+    type: VersioningType.URI
   });
 
   const document = SwaggerModule.createDocument(app, options);

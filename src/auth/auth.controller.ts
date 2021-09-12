@@ -1,14 +1,5 @@
 import { RegisterDTO } from '@auth/dto/register.dto';
-import { AuthService } from '@auth/services/auth.service';
-import {
-  Body,
-  ClassSerializerInterceptor,
-  Controller,
-  HttpStatus,
-  Post,
-  Res,
-  UseInterceptors
-} from '@nestjs/common';
+import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as swagger from '@nestjs/swagger';
 import {
@@ -20,6 +11,7 @@ import {
 import express from 'express';
 import { Model } from 'mongoose';
 import { UserModel } from './schema/user.schema';
+import { AuthService } from '@auth/services/auth.service';
 
 @Controller('auth')
 @swagger.ApiTags('auth')
@@ -29,7 +21,6 @@ export class AuthController {
     @InjectModel(UserModel.name) public userModel: Model<UserModel>
   ) {}
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Post('register')
   @ApiOperation({ summary: 'User register' })
   @ApiNotFoundResponse({
@@ -47,6 +38,8 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDTO, @Res() res: express.Response) {
     const newUser = await this.authService.registerUser(registerDto);
 
-    return res.status(HttpStatus.CREATED).json(new this.userModel(newUser));
+    const { password: _, ...user } = newUser;
+
+    return res.status(HttpStatus.CREATED).json(user);
   }
 }

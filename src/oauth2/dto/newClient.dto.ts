@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { GrantsEnum } from '@oauth2/schema/client-v2.schema';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { GrantsEnum } from '../schema/client.schema';
 
 export class NewClientDTO {
   @ApiProperty({
     type: String,
-    nullable: false,
+    nullable: false
   })
   @IsNotEmpty()
   @IsString()
@@ -13,7 +13,7 @@ export class NewClientDTO {
 
   @ApiProperty({
     type: String,
-    nullable: false,
+    nullable: false
   })
   @IsString()
   @IsNotEmpty()
@@ -22,11 +22,7 @@ export class NewClientDTO {
   @ApiProperty({
     type: [String],
     isArray: true,
-    enum: [
-      GrantsEnum.client_credentials,
-      GrantsEnum.password,
-      GrantsEnum.refresh_token,
-    ],
+    enum: [GrantsEnum.client_credentials, GrantsEnum.password, GrantsEnum.refresh_token]
   })
   @IsOptional()
   @IsEnum(GrantsEnum, { each: true })
@@ -34,7 +30,7 @@ export class NewClientDTO {
 
   @ApiProperty({
     type: [String],
-    nullable: true,
+    nullable: true
   })
   @IsString({ each: true })
   redirectUris: Array<string>;
