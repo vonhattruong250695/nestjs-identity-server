@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { NewClientDTO } from '@oauth2/dto/newClient.dto';
 import express from 'express';
 import { LeanDocument } from 'mongoose';
@@ -9,13 +9,13 @@ import { ClientService } from '@oauth2/services/client.service';
 
 @Injectable()
 export class Oauth2Service {
-  public oauth2Server: OAuth2Server;
+  public oauthApp: OAuth2Server;
   private logger = new Logger(Oauth2ModelService.name);
   constructor(
     private oauth2ModelService: Oauth2ModelService,
     private clientServiceV2: ClientService
   ) {
-    this.oauth2Server = new OAuth2Server({
+    this.oauthApp = new OAuth2Server({
       model: this.oauth2ModelService,
       accessTokenLifetime: 60 * 60
     });
@@ -28,10 +28,15 @@ export class Oauth2Service {
   }
 
   async handleToken(req: express.Request, res: express.Response): Promise<OAuth2Server.Token> {
-    const request = new OAuth2Server.Request(req);
-    const response = new OAuth2Server.Response(res);
+    try {
+      const request = new OAuth2Server.Request(req);
+      const response = new OAuth2Server.Response(res);
 
-    return await this.oauth2Server.token(request, response);
+      return this.oauthApp.token(request, response);
+    } catch (e) {
+      this.logger.error(e);
+      throw new InternalServerErrorException();
+    }
   }
 
   async handleAuthorize(
@@ -41,7 +46,7 @@ export class Oauth2Service {
     const request = new OAuth2Server.Request(req);
     const response = new OAuth2Server.Response(res);
     try {
-      return await this.oauth2Server.authorize(request, response);
+      return await this.oauthApp.authorize(request, response);
     } catch (e) {}
   }
 }

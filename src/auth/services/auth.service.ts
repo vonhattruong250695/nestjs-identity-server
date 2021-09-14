@@ -1,10 +1,12 @@
 import { UserRegister } from '@auth/interfaces/user-register.interface';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
 import { RegisterDTO } from '../dto/register.dto';
-import { UserModel } from './../schema/user.schema';
+import { UserModel, validateUserPassword } from './../schema/user.schema';
 import { ClientService } from '@oauth2/services/client.service';
+import { UnauthorizedRequestError } from 'oauth2-server';
+import { AuthError } from '@auth/constants/auth.error';
 
 @Injectable()
 export class AuthService {
@@ -33,5 +35,23 @@ export class AuthService {
       ...userDoc.toJSON(),
       clientInfo: clientAppOfUser
     };
+  }
+
+  async getUserInfo(userName: string, password: string): Promise<UserModel> {
+    const userInfo = await this.userModel.findOne({
+      userEmail: userName
+    });
+
+    if (!userInfo) {
+      throw new NotFoundException();
+    }
+
+    const isValidPassword = await validateUserPassword(password, userInfo.password);
+
+    if (!isValidPassword) {
+      throw new UnauthorizedRequestError(AuthError.UserPasswordIncorrect);
+    }
+
+    return userInfo;
   }
 }

@@ -38,11 +38,13 @@ export class Oauth2Controller {
     });
 
     req.headers.authorization = `Basic ${combineClientDataToTokenV2(client_id, client_secret)}`;
+
     this.logger.debug(req.headers);
 
     const tokenResult: OAuth2Server.Token = await this.oauth2Service.handleToken(req, res);
 
     this.logger.log(tokenResult);
+    return tokenResult;
   }
 
   @ApiResponse({

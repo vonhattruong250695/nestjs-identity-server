@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GrantsEnum } from '@oauth2/schema/client.schema';
-import { IsEmail, IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class OAuth2TokenDTO {
   @ApiProperty({
@@ -34,6 +34,7 @@ export class OAuth2TokenDTO {
   })
   @ValidateIf((o) => o.grant_type === GrantsEnum.refresh_token)
   @IsString()
+  @IsOptional()
   refresh_token: string;
 
   @ApiProperty({
@@ -55,4 +56,13 @@ export class OAuth2TokenDTO {
   @IsString()
   @IsNotEmpty()
   client_secret: string;
+
+  @ApiProperty({
+    name: 'redirect_url',
+    description: 'Redirect url after successful login',
+    required: false
+  })
+  @IsOptional()
+  @IsString()
+  redirect_url: string;
 }

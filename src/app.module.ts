@@ -3,7 +3,6 @@ import { HttpException, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Oauth2Module } from '@oauth2/oauth2.module';
-import { Oauth2ModelService } from '@oauth2/services/oauth2-model.service';
 import { AllExceptionFilter } from '@shared/exception.filter';
 import { LoggingInterceptor } from '@shared/interceptor/logging.interceptor';
 import { RavenInterceptor } from 'nest-raven';
@@ -15,7 +14,6 @@ import { AppService } from './app.service';
   controllers: [AppController],
   providers: [
     AppService,
-    Oauth2ModelService,
     {
       provide: APP_FILTER,
       useClass: AllExceptionFilter

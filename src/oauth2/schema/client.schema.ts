@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as CryptoJS from 'crypto-js';
 import { Document } from 'mongoose';
+import OAuth2Server from 'oauth2-server';
 
 export enum GrantsEnum {
   password = 'password',
@@ -24,6 +25,15 @@ export function hashClientSecret(clientSecret: string): string {
   );
 }
 
+export function toOAuth2ServerClient(clientModel: ClientModel): OAuth2Server.Client {
+  return {
+    id: clientModel._id,
+    grants: clientModel.grants,
+    redirectUris: clientModel.redirectUris,
+    ...clientModel
+  };
+}
+
 @Schema({ timestamps: true })
 export class ClientModel extends Document {
   @Prop({ type: String, required: true, unique: true })
@@ -37,9 +47,11 @@ export class ClientModel extends Document {
 
   @Prop({ type: [String], default: [] })
   redirectUris: [string];
+
+
 }
 
-export const ClientSchema= SchemaFactory.createForClass(ClientModel);
+export const ClientSchema = SchemaFactory.createForClass(ClientModel);
 
 ClientSchema.pre<ClientModel>('save', async function (next) {
   this.clientId = hashClientId(this.clientId);

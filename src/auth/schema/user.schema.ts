@@ -7,6 +7,10 @@ import { ClientModel } from '@oauth2/schema/client.schema';
 
 const SALT_LENGTH = 10;
 
+export async function validateUserPassword(password: string, hashPassword: string): Promise<boolean> {
+  return bcrypt.compare(password, hashPassword);
+}
+
 @Schema({ timestamps: true })
 export class UserModel extends Document {
   @Prop({ type: String, required: false })
@@ -27,10 +31,6 @@ export class UserModel extends Document {
 
   @Prop({ type: SchemaTypes.ObjectId, ref: ClientModel.name })
   client: Types.ObjectId;
-
-  public validatePassword(password): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
-  }
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserModel);
