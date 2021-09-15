@@ -1,11 +1,27 @@
 import { UserModel } from '@auth/schema/user.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { SchemaTypes, Types, Document } from 'mongoose';
+import { Document, LeanDocument, SchemaTypes, Types } from 'mongoose';
 import { ClientModel } from '@oauth2/schema/client.schema';
+import OAuth2Server from 'oauth2-server';
 
-@Schema({ timestamps: true })
+export function toOauth2ServerToken(
+  clientTokenModel: LeanDocument<ClientTokenModel>,
+  client: OAuth2Server.Client,
+  user: OAuth2Server.User
+): OAuth2Server.Token {
+  return {
+    accessToken: clientTokenModel.accessToken,
+    accessTokenExpiresAt: clientTokenModel.accessTokenExpiresAt,
+    refreshToken: clientTokenModel.refreshToken,
+    refreshTokenExpiresAt: clientTokenModel.refreshTokenExpiresAt,
+    client,
+    user
+  };
+}
+
+@Schema({ timestamps: true, collection: 'clientTokens' })
 export class ClientTokenModel extends Document {
-  @Prop({ type: String, required: true, unique: true })
+  @Prop({ type: String, required: false })
   clientId: string;
 
   @Prop({ type: String, required: true })
@@ -21,10 +37,10 @@ export class ClientTokenModel extends Document {
   refreshTokenExpiresAt: Date;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: ClientModel.name })
-  client: Types.ObjectId;
+  client: OAuth2Server.Client;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: UserModel.name })
-  user: Types.ObjectId;
+  user: OAuth2Server.User;
 }
 
 export const ClientTokenSchema = SchemaFactory.createForClass(ClientTokenModel);

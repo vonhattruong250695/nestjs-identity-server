@@ -1,6 +1,7 @@
 import { AuthModule } from '@auth/auth.module';
 import { HttpException, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Oauth2Module } from '@oauth2/oauth2.module';
 import { AllExceptionFilter } from '@shared/exception.filter';
@@ -12,6 +13,7 @@ import { AppService } from './app.service';
 @Module({
   imports: [MongooseModule.forRoot(process.env.DB_URI_CONNECTION), AuthModule, Oauth2Module],
   controllers: [AppController],
+  // exports: [JwtModule],
   providers: [
     AppService,
     {

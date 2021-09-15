@@ -43,8 +43,7 @@ export class Oauth2Controller {
 
     const tokenResult: OAuth2Server.Token = await this.oauth2Service.handleToken(req, res);
 
-    this.logger.log(tokenResult);
-    return tokenResult;
+    return res.status(HttpStatus.CREATED).json(tokenResult);
   }
 
   @ApiResponse({
@@ -57,11 +56,11 @@ export class Oauth2Controller {
   })
   @ApiOperation({ summary: 'Register new client' })
   @Post('client')
-  async newClient(@Body() newClientDTO: NewClientDTO, @Res() req: express.Response) {
+  async newClient(@Body() newClientDTO: NewClientDTO, @Res() res: express.Response) {
     const newClientApp = await this.oauth2Service.handleCreateNewClient(newClientDTO);
 
     this.logger.log(newClientApp);
 
-    return req.status(HttpStatus.CREATED).json(newClientApp);
+    return res.status(HttpStatus.CREATED).json(newClientApp);
   }
 }

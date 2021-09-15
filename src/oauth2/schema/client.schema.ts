@@ -34,7 +34,7 @@ export function toOAuth2ServerClient(clientModel: ClientModel): OAuth2Server.Cli
   };
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'clients' })
 export class ClientModel extends Document {
   @Prop({ type: String, required: true, unique: true })
   clientId: string;
@@ -47,8 +47,6 @@ export class ClientModel extends Document {
 
   @Prop({ type: [String], default: [] })
   redirectUris: [string];
-
-
 }
 
 export const ClientSchema = SchemaFactory.createForClass(ClientModel);

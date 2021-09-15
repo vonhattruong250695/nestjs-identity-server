@@ -7,11 +7,14 @@ import { ClientModel } from '@oauth2/schema/client.schema';
 
 const SALT_LENGTH = 10;
 
-export async function validateUserPassword(password: string, hashPassword: string): Promise<boolean> {
+export async function validateUserPassword(
+  password: string,
+  hashPassword: string
+): Promise<boolean> {
   return bcrypt.compare(password, hashPassword);
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'users' })
 export class UserModel extends Document {
   @Prop({ type: String, required: false })
   @Exclude()
