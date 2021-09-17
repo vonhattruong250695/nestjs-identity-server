@@ -16,6 +16,7 @@ export class OAuth2TokenDTO {
     example: 'test_user_v4@gmail.com'
   })
   @ValidateIf((o) => o.grant_type === GrantsEnum.password)
+  @IsOptional()
   @IsEmail()
   username: string;
 
@@ -25,6 +26,7 @@ export class OAuth2TokenDTO {
     example: '123qwe123qwe@'
   })
   @ValidateIf((o) => o.grant_type === GrantsEnum.password)
+  @IsOptional()
   @IsString()
   password: string;
 

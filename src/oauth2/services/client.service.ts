@@ -28,6 +28,22 @@ export class ClientService {
     return clientApp;
   }
 
+  async findClientAppByClientId({
+    clientId
+  }: {
+    clientId: string;
+  }): Promise<ClientModel & { _id: Types.ObjectId }> {
+    const clientApp = await this.clientModelV2.findOne({
+      clientId
+    });
+
+    if (!clientApp) {
+      throw new HttpException(Oauth2Error.ClientAppNotFound, HttpStatus.NOT_FOUND);
+    }
+
+    return clientApp;
+  }
+
   async checkClientAppExist(clientId: string) {
     const clientApp = await this.clientModelV2.findOne({ clientId });
 

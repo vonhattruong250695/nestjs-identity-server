@@ -24,6 +24,9 @@ export class ClientTokenModel extends Document {
   @Prop({ type: String, required: false })
   clientId: string;
 
+  @Prop({ type: String, required: false })
+  id: string;
+
   @Prop({ type: String, required: true })
   accessToken: string;
 

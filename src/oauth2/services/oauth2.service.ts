@@ -3,7 +3,7 @@ import { NewClientDTO } from '@oauth2/dto/newClient.dto';
 import express from 'express';
 import { LeanDocument } from 'mongoose';
 import { Oauth2ModelService } from './oauth2-model.service';
-import OAuth2Server = require('oauth2-server');
+import OAuth2Server = require('@truongvn/oauth2-server');
 import { ClientModel } from '@oauth2/schema/client.schema';
 import { ClientService } from '@oauth2/services/client.service';
 
@@ -34,6 +34,7 @@ export class Oauth2Service {
 
       return this.oauthApp.token(request, response);
     } catch (e) {
+      this.logger.error(`handleToken error`);
       this.logger.error(e);
       throw new InternalServerErrorException();
     }

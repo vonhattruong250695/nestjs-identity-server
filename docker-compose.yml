@@ -13,19 +13,19 @@ services:
   #     - POSTGRES_DB=argo
   #     - POSTGRES_USER=argo
   #     - POSTGRES_PASSWORD=secret
-  #   volumes:
-  #     - ./db-data:/var/lib/postgresql/data
+  #     volumes:
+  #       - ./db-data:/var/lib/postgresql/data
   #   ports:
   #     - 5432:5432
 
   mongodb:
     image: mongo:4.2.3-bionic
-    # command: mongod --port 27018
-    # ports:
-    #   - 27017:27017
     # networks:
     # - myapp
     command: mongod --port 27018
+    volumes:
+      - mongodb:/data/db
+      - mongodb_config:/data/configdb
     ports:
       - '27018:27018'
 
