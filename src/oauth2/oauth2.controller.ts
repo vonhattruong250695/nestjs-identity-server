@@ -1,6 +1,6 @@
-import { Body, Controller, HttpStatus, Inject, Logger, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Inject, Logger, Post, Req, Res } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import express from 'express';
 import { NewClientDTO } from './dto/newClient.dto';
 import { OAuth2TokenDTO } from './dto/oauth-token.dto';
@@ -8,6 +8,11 @@ import { Oauth2Service } from './services/oauth2.service';
 import OAuth2Server from 'oauth2-server';
 import { ClientService } from '@oauth2/services/client.service';
 import { combineClientDataToTokenV2 } from '@oauth2/schema/client.schema';
+import { KeyConstants } from '@oauth2/constants/key.constants';
+import { AuthService } from '@auth/services/auth.service';
+import { ClientTokenModel } from '@oauth2/schema/client-token.schema';
+import { LeanDocument } from 'mongoose';
+import { UserModel } from '@auth/schema/user.schema';
 
 @ApiTags('oauth2')
 @Controller('oauth2')
@@ -16,6 +21,7 @@ export class Oauth2Controller {
   constructor(
     private oauth2Service: Oauth2Service,
     private clientServiceV2: ClientService,
+    private authService: AuthService,
     @Inject(REQUEST) private requestCtx: express.Request
   ) {}
 
@@ -23,8 +29,12 @@ export class Oauth2Controller {
     summary: 'Sign in',
     description: 'Sign in with Oauth2'
   })
-  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiResponse({
+    description: 'Successful Authenticate With Enum Grants Tpe',
+    type: ClientTokenModel
+  })
   @Post('token')
+  @ApiConsumes('application/x-www-form-urlencoded')
   async token(
     @Body() oauthTokenDTO: OAuth2TokenDTO,
     @Req() req: express.Request,
@@ -62,5 +72,24 @@ export class Oauth2Controller {
     this.logger.log(newClientApp);
 
     return res.status(HttpStatus.CREATED).json(newClientApp);
+  }
+
+  @ApiOperation({ summary: 'Authenticate from Bearer Token Headers' })
+  @ApiResponse({
+    description: 'Successful authenticate',
+    type: ClientTokenModel
+  })
+  @ApiBearerAuth(KeyConstants.JwtKey)
+  @Get('authenticate')
+  async authenticateRequest(@Req() req: express.Request, @Res() res: express.Response) {
+    this.logger.log(req.headers);
+    const tokenResult = await this.oauth2Service.handleAuthenticateRequest(req, res);
+
+    const userInfo = await this.authService.getUserById(tokenResult.user.toString());
+
+    tokenResult.userInfo = userInfo;
+    delete (tokenResult.userInfo as LeanDocument<UserModel>).password;
+
+    return res.status(HttpStatus.CREATED).json(tokenResult);
   }
 }

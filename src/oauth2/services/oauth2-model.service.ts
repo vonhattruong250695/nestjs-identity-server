@@ -72,7 +72,7 @@ export class Oauth2ModelService
     password: string
   ): Promise<OAuth2Server.User | OAuth2Server.Falsey> {
     this.logger.debug(`getUser`);
-    return this.authService.getUserInfo(username, password);
+    return this.authService.getUserInfoByUserNameAndPassword(username, password);
   }
 
   async getClient(

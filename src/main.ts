@@ -5,6 +5,7 @@ import * as cookieParser from 'cookie-parser';
 import 'dotenv/config';
 import { AppNest } from './app.model';
 import { AppModule } from './app.module';
+import { KeyConstants } from '@oauth2/constants/key.constants';
 
 const NOOP = () => null;
 
@@ -36,7 +37,17 @@ async function bootstrap() {
     .setTitle('Nestjs identity server')
     .setDescription('Nestjs identity server description')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header'
+      },
+      KeyConstants.JwtKey // This name here is important for matching up with @ApiBearerAuth() in your controller!
+    )
     .build();
 
   app.enableVersioning({

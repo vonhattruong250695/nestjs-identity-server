@@ -37,7 +37,7 @@ export class AuthService {
     };
   }
 
-  async getUserInfo(userName: string, password: string): Promise<UserModel> {
+  async getUserInfoByUserNameAndPassword(userName: string, password: string): Promise<UserModel> {
     const userInfo = await this.userModel.findOne({
       userEmail: userName
     });
@@ -53,5 +53,9 @@ export class AuthService {
     }
 
     return userInfo;
+  }
+
+  async getUserById(userId: string): Promise<LeanDocument<UserModel>> {
+    return this.userModel.findOne({ _id: userId }).lean();
   }
 }
