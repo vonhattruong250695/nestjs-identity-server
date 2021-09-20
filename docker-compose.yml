@@ -24,7 +24,7 @@ services:
     # - myapp
     command: mongod --port 27018
     volumes:
-      - ./db-data:/data/db
+      - ./../db-data:/data/db
     ports:
       - '27018:27018'
 

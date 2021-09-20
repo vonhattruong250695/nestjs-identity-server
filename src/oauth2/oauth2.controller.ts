@@ -10,9 +10,9 @@ import { ClientService } from '@oauth2/services/client.service';
 import { combineClientDataToTokenV2 } from '@oauth2/schema/client.schema';
 import { KeyConstants } from '@oauth2/constants/key.constants';
 import { AuthService } from '@auth/services/auth.service';
-import { ClientTokenModel } from '@oauth2/schema/client-token.schema';
 import { LeanDocument } from 'mongoose';
 import { UserModel } from '@auth/schema/user.schema';
+import { ClientTokenResponseDTO } from '@oauth2/dto/authenticate.dto';
 
 @ApiTags('oauth2')
 @Controller('oauth2')
@@ -31,7 +31,7 @@ export class Oauth2Controller {
   })
   @ApiResponse({
     description: 'Successful Authenticate With Enum Grants Tpe',
-    type: ClientTokenModel
+    type: ClientTokenResponseDTO
   })
   @Post('token')
   @ApiConsumes('application/x-www-form-urlencoded')
@@ -77,7 +77,7 @@ export class Oauth2Controller {
   @ApiOperation({ summary: 'Authenticate from Bearer Token Headers' })
   @ApiResponse({
     description: 'Successful authenticate',
-    type: ClientTokenModel
+    type: ClientTokenResponseDTO
   })
   @ApiBearerAuth(KeyConstants.JwtKey)
   @Get('authenticate')

@@ -6,7 +6,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ClientService } from '@oauth2/services/client.service';
 import { ClientModel, ClientSchema } from '@oauth2/schema/client.schema';
 import { ClientTokenModel, ClientTokenSchema } from '@oauth2/schema/client-token.schema';
-import { ClientTokenService } from '@oauth2/services/client-token.service';
 import { AuthService } from '@auth/services/auth.service';
 import { UserModel, UserSchema } from '@auth/schema/user.schema';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -33,7 +32,6 @@ import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
     Oauth2ModelService,
     Oauth2Service,
     ClientService,
-    ClientTokenService,
     AuthService,
     {
       provide: JWT_MODULE_OPTIONS,
