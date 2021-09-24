@@ -20,6 +20,10 @@ export class UserModel extends Document {
   @Exclude()
   password: string;
 
+  @Prop({ type: String, required: false })
+  @Exclude()
+  hashRefreshToken: string;
+
   @Prop({ type: String, unique: true })
   userEmail: string;
 

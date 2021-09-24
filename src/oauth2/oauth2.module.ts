@@ -10,6 +10,7 @@ import { AuthService } from '@auth/services/auth.service';
 import { UserModel, UserSchema } from '@auth/schema/user.schema';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
+import { SocialLoginModel, SocialLoginSchema } from '@auth/schema/social-login.schema';
 
 @Module({
   imports: [
@@ -24,7 +25,11 @@ import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
     MongooseModule.forFeature([
       { name: ClientModel.name, schema: ClientSchema },
       { name: ClientTokenModel.name, schema: ClientTokenSchema },
-      { name: UserModel.name, schema: UserSchema }
+      { name: UserModel.name, schema: UserSchema },
+      {
+        name: SocialLoginModel.name,
+        schema: SocialLoginSchema
+      }
     ])
   ],
   controllers: [Oauth2Controller],
