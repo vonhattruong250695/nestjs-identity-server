@@ -5,6 +5,8 @@ import { LeanDocument } from 'mongoose';
 import { Oauth2ModelService } from './oauth2-model.service';
 import { ClientModel } from '@oauth2/schema/client.schema';
 import { ClientService } from '@oauth2/services/client.service';
+import { IUserJwtInterface } from '@auth/interfaces/user-jwt.interface';
+import { SocialTypeEnum } from '@auth/schema/social-login.schema';
 import OAuth2Server = require('@truongvn/oauth2-server');
 
 @Injectable()
@@ -47,7 +49,7 @@ export class Oauth2Service {
     const request = new OAuth2Server.Request(req);
     const response = new OAuth2Server.Response(res);
     try {
-      return await this.oauthApp.authorize(request, response);
+      return this.oauthApp.authorize(request, response);
     } catch (e) {
       this.logger.error(`handleAuthorize error => ${e}`);
       throw new InternalServerErrorException();
@@ -61,6 +63,15 @@ export class Oauth2Service {
     const request = new OAuth2Server.Request(req);
     const response = new OAuth2Server.Response(res);
     try {
+      if (
+        [SocialTypeEnum.Google, SocialTypeEnum.Facebook].includes(
+          (req.user as IUserJwtInterface).socialType
+        )
+      ) {
+        const { userId } = req.user as IUserJwtInterface;
+        return this.oauth2ModelService.getClientTokenModelByUserId(userId);
+      }
+
       const result = await this.oauthApp.authenticate(request, response);
 
       return JSON.parse(JSON.stringify(result));

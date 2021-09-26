@@ -63,7 +63,7 @@ export class RegisterDTO {
       clientSecret: userSocialResponse.clientSecret,
       firstName: userSocialResponse.name.givenName,
       lastName: userSocialResponse.name.familyName,
-      password: null,
+      password: '',
       socialLogin: userSocialResponse.socialObjectId,
       userEmail: userSocialResponse.emails[0].value
     };

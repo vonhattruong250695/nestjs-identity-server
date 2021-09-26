@@ -42,6 +42,7 @@ import { SocialLoginModel, SocialLoginSchema } from '@auth/schema/social-login.s
       provide: JWT_MODULE_OPTIONS,
       useValue: JwtService
     }
-  ]
+  ],
+  exports: [Oauth2ModelService, ClientService]
 })
 export class Oauth2Module {}

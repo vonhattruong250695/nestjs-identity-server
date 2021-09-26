@@ -1,6 +1,8 @@
 import {
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger
@@ -27,6 +29,7 @@ export class Oauth2ModelService
 
   constructor(
     private clientService: ClientService,
+    @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
     @InjectModel(UserModel.name) public userModel: Model<UserModel>,
     @InjectModel(ClientTokenModel.name) public clientTokenModel: Model<ClientTokenModel>
@@ -36,9 +39,10 @@ export class Oauth2ModelService
     token: OAuth2Server.Token,
     client: OAuth2Server.Client,
     user: OAuth2Server.User
-  ): Promise<OAuth2Server.Token | OAuth2Server.Falsey> {
+  ): Promise<OAuth2Server.Token> {
     this.logger.debug(`saveToken`);
     this.logger.debug(client.id);
+    this.logger.debug(token);
 
     try {
       const clientTokenDoc = new this.clientTokenModel({
@@ -80,10 +84,8 @@ export class Oauth2ModelService
     clientSecret: string
   ): Promise<OAuth2Server.Client | OAuth2Server.Falsey> {
     try {
-      this.logger.debug('getClient');
       const result = await this.clientService.findClientApp({ clientId, clientSecret });
 
-      this.logger.debug(`getClient result = ${result}`);
       return toOAuth2ServerClient(result);
     } catch (e) {
       this.logger.error(e);
@@ -104,7 +106,6 @@ export class Oauth2ModelService
       refreshTokenResult.id = refreshTokenResult.id.toString();
       refreshTokenResult.client.id = refreshTokenResult.client._id.toString();
 
-      this.logger.log(refreshTokenResult);
       return refreshTokenResult;
     } catch (e) {
       this.logger.error(`getRefreshToken error => ${e}`);
@@ -116,15 +117,17 @@ export class Oauth2ModelService
     const deleteResult = await this.clientTokenModel.deleteOne({
       refreshToken: token.refreshToken
     });
-    this.logger.debug(`revokeToken`);
 
-    return !deleteResult.deletedCount ? false : true;
+    return !!deleteResult.deletedCount;
   }
 
   async getUserFromClient(client: Client): Promise<User | Falsey> {
-    this.logger.debug(`getUserFromClient`);
     const result = await this.clientService.findClientAppByClientId({ clientId: client.id });
 
     return toOAuth2ServerClient(result);
+  }
+
+  async getClientTokenModelByUserId(userId: string): Promise<OAuth2Server.Token> {
+    return this.clientTokenModel.findOne({ user: new Types.ObjectId(userId) }).lean();
   }
 }

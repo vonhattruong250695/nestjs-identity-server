@@ -11,6 +11,8 @@ import { GoogleStrategy } from '@auth/strategy/google.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
+import { JwtStrategy } from '@auth/strategy/jwt.strategy';
+import { Oauth2ModelService } from '@oauth2/services/oauth2-model.service';
 
 @Module({
   imports: [
@@ -35,7 +37,9 @@ import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
   providers: [
     AuthService,
     ClientService,
+    Oauth2ModelService,
     GoogleStrategy,
+    JwtStrategy,
     {
       provide: JWT_MODULE_OPTIONS,
       useValue: JwtService

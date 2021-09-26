@@ -1,5 +1,5 @@
 import { UserRegister } from '@auth/interfaces/user-register.interface';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
 import { RegisterDTO } from '../dto/register.dto';
@@ -11,23 +11,27 @@ import { JwtService } from '@nestjs/jwt';
 import { SocialLoginModel, SocialTypeEnum } from '@auth/schema/social-login.schema';
 import { NewSocialLoginDTO } from '@auth/dto/new-social-login.dto';
 import * as bcrypt from 'bcrypt';
+import { ClientModel } from '@oauth2/schema/client.schema';
+import { Oauth2ModelService } from '@oauth2/services/oauth2-model.service';
+import OAuth2Server = require('@truongvn/oauth2-server');
 
 @Injectable()
 export class AuthService {
   private logger = new Logger(AuthService.name);
   constructor(
-    @InjectModel(UserModel.name) public userModel: Model<UserModel>,
-    @InjectModel(SocialLoginModel.name) public socialLoginModel: Model<SocialLoginModel>,
+    @InjectModel(UserModel.name) private userModel: Model<UserModel>,
+    @InjectModel(SocialLoginModel.name) private socialLoginModel: Model<SocialLoginModel>,
     private readonly jwtService: JwtService,
-    private clientServiceV2: ClientService
+    private clientService: ClientService,
+    @Inject(forwardRef(() => Oauth2ModelService))
+    private oauth2ModelService: Oauth2ModelService
   ) {}
 
   async registerUser(createUserDto: RegisterDTO): Promise<LeanDocument<UserRegister>> {
-    const clientAppOfUser = await this.clientServiceV2.findClientApp({
+    const clientAppOfUser = await this.clientService.findClientApp({
       clientId: createUserDto.clientId,
       clientSecret: createUserDto.clientSecret
     });
-
     const userDoc = new this.userModel({
       ...createUserDto,
       client: clientAppOfUser._id
@@ -84,7 +88,7 @@ export class AuthService {
     const payload = { socialType, userId: user._id };
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME
+      expiresIn: `${process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME}s`
     });
   }
 
@@ -95,12 +99,8 @@ export class AuthService {
     const payload = { socialType, userId: user._id };
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_TOKEN_SECRET,
-      expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME
+      expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME}s`
     });
-  }
-
-  async updateUserHashRefreshToken(userId: string, refreshToken: string) {
-    await this.userModel.findOneAndUpdate({ _id: userId }, { refreshToken });
   }
 
   async createNewSocialLogin(
@@ -113,22 +113,32 @@ export class AuthService {
     return socialLoginDoc.toJSON();
   }
 
-  async hashRefreshToken(refreshToken: string): Promise<string> {
-    return bcrypt.hash(refreshToken, process.env.JWT_SALT_LENGTH);
+  async hashUserToken(token: string): Promise<string> {
+    return bcrypt.hash(token, +process.env.JWT_SALT_LENGTH);
   }
 
   async handleResponseUserToken(
-    user: LeanDocument<UserModel>
-  ): Promise<[accessToken: string, refreshToken: string]> {
+    user: LeanDocument<UserModel>,
+    clientApp: LeanDocument<ClientModel>
+  ): Promise<OAuth2Server.Token> {
     const [accessToken, refreshToken] = await Promise.all([
-      this.generateAccessToken(user),
-      this.generateRefreshToken(user)
+      this.generateAccessToken(user, SocialTypeEnum.Google),
+      this.generateRefreshToken(user, SocialTypeEnum.Google)
     ]);
 
-    const hashRefreshToken = await this.hashRefreshToken(refreshToken);
+    const token: OAuth2Server.Token = {
+      client: clientApp as OAuth2Server.Client,
+      user: user as OAuth2Server.User,
+      accessToken,
+      refreshToken
+    };
 
-    await this.updateUserHashRefreshToken(user._id, hashRefreshToken);
+    clientApp.id = clientApp._id;
 
-    return [accessToken, refreshToken];
+    return this.oauth2ModelService.saveToken(
+      token,
+      clientApp as OAuth2Server.Client,
+      user as OAuth2Server.User
+    );
   }
 }

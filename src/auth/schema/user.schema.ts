@@ -5,8 +5,6 @@ import { Document, SchemaTypes, Types } from 'mongoose';
 import { SocialLoginModel } from './social-login.schema';
 import { ClientModel } from '@oauth2/schema/client.schema';
 
-const SALT_LENGTH = 10;
-
 export async function validateUserPassword(
   password: string,
   hashPassword: string
@@ -17,8 +15,7 @@ export async function validateUserPassword(
 @Schema({ timestamps: true, collection: 'users' })
 export class UserModel extends Document {
   @Prop({ type: String, required: false })
-  @Exclude()
-  password: string;
+  password?: string;
 
   @Prop({ type: String, required: false })
   @Exclude()
@@ -44,6 +41,6 @@ export const UserSchema = SchemaFactory.createForClass(UserModel);
 UserSchema.pre<UserModel>('save', async function (next) {
   if (!this.password.trim().length) return next();
 
-  this.password = await bcrypt.hash(this.password, SALT_LENGTH);
+  this.password = await bcrypt.hash(this.password, +process.env.JWT_SALT_LENGTH);
   next();
 });

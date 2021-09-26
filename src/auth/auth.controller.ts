@@ -4,10 +4,10 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Logger,
   NotFoundException,
   Post,
-  Query,
   Req,
   Res,
   UseGuards
@@ -26,10 +26,10 @@ import { UserModel } from './schema/user.schema';
 import { AuthService } from '@auth/services/auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { IGoogleStrategyResponse } from '@auth/interfaces/google-strategy-response.interface';
-import { GoogleRedirectDTO } from '@auth/dto/google-redirect.dto';
 import { ClientService } from '@oauth2/services/client.service';
-import { AuthError } from '@auth/constants/auth.error';
+import { REQUEST } from '@nestjs/core';
 import { NewSocialLoginDTO } from '@auth/dto/new-social-login.dto';
+import { AuthError } from '@auth/constants/auth.error';
 import { SocialTypeEnum } from '@auth/schema/social-login.schema';
 
 @Controller('auth')
@@ -39,7 +39,9 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private clientService: ClientService,
-    @InjectModel(UserModel.name) public userModel: Model<UserModel>
+    @InjectModel(UserModel.name) public userModel: Model<UserModel>,
+
+    @Inject(REQUEST) private requestCtx: express.Request
   ) {}
 
   @Post('register')
@@ -66,7 +68,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req: express.Request) {}
+  async googleAuth(@Req() _: express.Request) {}
 
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
@@ -75,10 +77,11 @@ export class AuthController {
     req: express.Request & {
       user: IGoogleStrategyResponse;
     },
-    @Query() query: GoogleRedirectDTO,
     @Res() res: express.Response
   ) {
-    const { clientId, clientSecret } = query;
+    // const { clientId, clientSecret } = query;
+    const clientId = 'W21RKhZkWG92eESlKzoOGfQOvMBy6uanEm7C9lRUvO4=';
+    const clientSecret = 'c5ead6aa52c5adcc77d23de2489a5fb9f4b50b930425ee0b182efb3ee6abdb2e';
 
     if (!req.user) {
       throw new NotFoundException(AuthError.UserNotFoundFromSocial);
@@ -86,24 +89,23 @@ export class AuthController {
 
     const { id: socialId } = req.user;
 
-    const socialLoginDoc = await this.authService.getSocialInfo(socialId);
+    const [socialLoginDoc, clientApp] = await Promise.all([
+      this.authService.getSocialInfo(socialId),
+      this.clientService.findClientApp({ clientId, clientSecret })
+    ]);
 
     if (socialLoginDoc) {
       const userInfoBySocialLogin = await this.authService.getUserInfoBySocialId(
         socialLoginDoc._id
       );
 
-      const [accessToken, refreshToken] = await this.authService.handleResponseUserToken(
-        userInfoBySocialLogin
+      const clientToken = await this.authService.handleResponseUserToken(
+        userInfoBySocialLogin,
+        clientApp
       );
 
-      return res.status(HttpStatus.OK).json({
-        accessToken,
-        refreshToken
-      });
+      return res.status(HttpStatus.OK).json(clientToken);
     }
-
-    const client = await this.clientService.findClientApp({ clientId, clientSecret });
 
     const newSocialLoginDTO = new NewSocialLoginDTO({
       socialId: req.user.id,
@@ -115,18 +117,15 @@ export class AuthController {
 
     const createUserDTO = new RegisterDTO().fromUserSocial({
       ...req.user,
-      clientSecret: client.clientSecret,
-      clientId: client.clientId,
-      socialObjectId: socialLoginDoc._id
+      clientSecret: clientSecret,
+      clientId: clientId,
+      socialObjectId: socialLogin._id
     });
 
     const user = await this.authService.registerUser(createUserDTO);
 
-    const [accessToken, refreshToken] = await this.authService.handleResponseUserToken(user);
+    const clientToken = await this.authService.handleResponseUserToken(user, clientApp);
 
-    return res.status(HttpStatus.OK).json({
-      accessToken,
-      refreshToken
-    });
+    return res.status(HttpStatus.OK).json(clientToken);
   }
 }

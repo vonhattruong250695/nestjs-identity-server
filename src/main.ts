@@ -21,7 +21,6 @@ async function bootstrap() {
         path: 'auth/google',
         method: RequestMethod.GET
       },
-
       {
         path: 'auth/google/redirect',
         method: RequestMethod.GET

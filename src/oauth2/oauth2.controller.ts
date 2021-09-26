@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpStatus, Inject, Logger, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Logger,
+  Post,
+  Req,
+  Res,
+  UseGuards
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import express from 'express';
@@ -13,6 +24,7 @@ import { AuthService } from '@auth/services/auth.service';
 import { LeanDocument } from 'mongoose';
 import { UserModel } from '@auth/schema/user.schema';
 import { ClientTokenResponseDTO } from '@oauth2/dto/authenticate.dto';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @ApiTags('oauth2')
 @Controller('oauth2')
@@ -81,13 +93,13 @@ export class Oauth2Controller {
   })
   @ApiBearerAuth(KeyConstants.JwtKey)
   @Get('authenticate')
+  @UseGuards(JwtAuthGuard)
   async authenticateRequest(@Req() req: express.Request, @Res() res: express.Response) {
     this.logger.log(req.headers);
+
     const tokenResult = await this.oauth2Service.handleAuthenticateRequest(req, res);
 
-    const userInfo = await this.authService.getUserById(tokenResult.user.toString());
-
-    tokenResult.userInfo = userInfo;
+    tokenResult.userInfo = await this.authService.getUserById(tokenResult.user.toString());
     delete (tokenResult.userInfo as LeanDocument<UserModel>).password;
 
     return res.status(HttpStatus.CREATED).json(tokenResult);
