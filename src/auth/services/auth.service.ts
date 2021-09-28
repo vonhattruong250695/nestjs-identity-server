@@ -10,9 +10,11 @@ import { AuthError } from '@auth/constants/auth.error';
 import { JwtService } from '@nestjs/jwt';
 import { SocialLoginModel, SocialTypeEnum } from '@auth/schema/social-login.schema';
 import { NewSocialLoginDTO } from '@auth/dto/new-social-login.dto';
-import * as bcrypt from 'bcrypt';
 import { ClientModel } from '@oauth2/schema/client.schema';
 import { Oauth2ModelService } from '@oauth2/services/oauth2-model.service';
+import { ISocialRedirectInterface } from '@auth/interfaces/social-redirect.interface';
+import express from 'express';
+import { IGoogleStrategyResponse } from '@auth/interfaces/google-auth-response.interface';
 import OAuth2Server = require('@truongvn/oauth2-server');
 
 @Injectable()
@@ -38,8 +40,6 @@ export class AuthService {
     });
 
     await userDoc.save();
-
-    this.logger.log(userDoc);
 
     return {
       ...userDoc.toJSON(),
@@ -113,10 +113,6 @@ export class AuthService {
     return socialLoginDoc.toJSON();
   }
 
-  async hashUserToken(token: string): Promise<string> {
-    return bcrypt.hash(token, +process.env.JWT_SALT_LENGTH);
-  }
-
   async handleResponseUserToken(
     user: LeanDocument<UserModel>,
     clientApp: LeanDocument<ClientModel>
@@ -135,10 +131,70 @@ export class AuthService {
 
     clientApp.id = clientApp._id;
 
+    this.logger.debug(`handleResponseToken`);
+    this.logger.debug(clientApp);
+    this.logger.debug(user);
+
     return this.oauth2ModelService.saveToken(
       token,
       clientApp as OAuth2Server.Client,
       user as OAuth2Server.User
     );
+  }
+
+  async handleSocialAuthRedirect({
+    req,
+    socialType
+  }: {
+    req: express.Request & {
+      user: IGoogleStrategyResponse;
+    };
+    socialType: SocialTypeEnum;
+  }): Promise<OAuth2Server.Token> {
+    const { clientId, clientSecret } = req.cookies as ISocialRedirectInterface;
+
+    if (!req.user) {
+      throw new NotFoundException(AuthError.UserNotFoundFromSocial);
+    }
+
+    const { id: socialId } = req.user;
+
+    const [socialLoginDoc, clientApp] = await Promise.all([
+      this.getSocialInfo(socialId),
+      this.clientService.findClientApp({ clientId, clientSecret })
+    ]);
+
+    if (socialLoginDoc) {
+      const userInfoBySocialLogin = await this.getUserInfoBySocialId(socialLoginDoc._id);
+
+      return this.handleResponseUserToken(userInfoBySocialLogin, clientApp);
+    }
+
+    const newSocialLoginDTO = new NewSocialLoginDTO({
+      socialId: req.user.id,
+      userSocialResponse: req.user,
+      socialType
+    });
+
+    const socialLogin = await this.createNewSocialLogin(newSocialLoginDTO);
+    this.logger.log(`socialLogin`);
+    this.logger.log(socialLogin);
+
+    const fromSocialResponse = {
+      ...req.user,
+      clientSecret: clientSecret,
+      clientId: clientId,
+      socialObjectId: socialLogin._id
+    };
+    this.logger.debug(fromSocialResponse);
+
+    const createUserDTO =
+      socialType === SocialTypeEnum.Google
+        ? new RegisterDTO().fromGoogleUser(fromSocialResponse)
+        : new RegisterDTO().fromFacebookUser(fromSocialResponse);
+
+    const user = await this.registerUser(createUserDTO);
+
+    return this.handleResponseUserToken(user, clientApp);
   }
 }

@@ -17,14 +17,10 @@ async function bootstrap() {
         path: 'oauth2/token',
         method: RequestMethod.POST
       },
-      {
-        path: 'auth/google',
-        method: RequestMethod.GET
-      },
-      {
-        path: 'auth/google/redirect',
-        method: RequestMethod.GET
-      }
+      'auth/google',
+      'auth/facebook',
+      'auth/:socialType/redirect',
+      'auth/:type/before-auth'
     ]
   });
 

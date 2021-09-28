@@ -5,19 +5,21 @@ import {
   Get,
   HttpStatus,
   Inject,
+  InternalServerErrorException,
   Logger,
-  NotFoundException,
+  Param,
   Post,
+  Query,
   Req,
   Res,
   UseGuards
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import * as swagger from '@nestjs/swagger';
 import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiTags,
   ApiUnprocessableEntityResponse
 } from '@nestjs/swagger';
 import express from 'express';
@@ -25,15 +27,15 @@ import { Model } from 'mongoose';
 import { UserModel } from './schema/user.schema';
 import { AuthService } from '@auth/services/auth.service';
 import { AuthGuard } from '@nestjs/passport';
-import { IGoogleStrategyResponse } from '@auth/interfaces/google-strategy-response.interface';
+import { IGoogleStrategyResponse } from '@auth/interfaces/google-auth-response.interface';
 import { ClientService } from '@oauth2/services/client.service';
 import { REQUEST } from '@nestjs/core';
-import { NewSocialLoginDTO } from '@auth/dto/new-social-login.dto';
 import { AuthError } from '@auth/constants/auth.error';
 import { SocialTypeEnum } from '@auth/schema/social-login.schema';
+import { GoogleAuthGuard } from '@auth/guards/google-auth.guard';
 
 @Controller('auth')
-@swagger.ApiTags('auth')
+@ApiTags('auth')
 export class AuthController {
   private logger = new Logger(AuthController.name);
   constructor(
@@ -67,7 +69,7 @@ export class AuthController {
   }
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleAuthGuard)
   async googleAuth(@Req() _: express.Request) {}
 
   @Get('google/redirect')
@@ -79,53 +81,50 @@ export class AuthController {
     },
     @Res() res: express.Response
   ) {
-    // const { clientId, clientSecret } = query;
-    const clientId = 'W21RKhZkWG92eESlKzoOGfQOvMBy6uanEm7C9lRUvO4=';
-    const clientSecret = 'c5ead6aa52c5adcc77d23de2489a5fb9f4b50b930425ee0b182efb3ee6abdb2e';
-
-    if (!req.user) {
-      throw new NotFoundException(AuthError.UserNotFoundFromSocial);
-    }
-
-    const { id: socialId } = req.user;
-
-    const [socialLoginDoc, clientApp] = await Promise.all([
-      this.authService.getSocialInfo(socialId),
-      this.clientService.findClientApp({ clientId, clientSecret })
-    ]);
-
-    if (socialLoginDoc) {
-      const userInfoBySocialLogin = await this.authService.getUserInfoBySocialId(
-        socialLoginDoc._id
-      );
-
-      const clientToken = await this.authService.handleResponseUserToken(
-        userInfoBySocialLogin,
-        clientApp
-      );
-
-      return res.status(HttpStatus.OK).json(clientToken);
-    }
-
-    const newSocialLoginDTO = new NewSocialLoginDTO({
-      socialId: req.user.id,
-      userSocialResponse: req.user,
+    const googleAuthToken = await this.authService.handleSocialAuthRedirect({
+      req,
       socialType: SocialTypeEnum.Google
     });
 
-    const socialLogin = await this.authService.createNewSocialLogin(newSocialLoginDTO);
+    return res.status(HttpStatus.OK).json(googleAuthToken);
+  }
 
-    const createUserDTO = new RegisterDTO().fromUserSocial({
-      ...req.user,
-      clientSecret: clientSecret,
-      clientId: clientId,
-      socialObjectId: socialLogin._id
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuthenticate(): Promise<any> {
+    return HttpStatus.OK;
+  }
+
+  @Get('facebook/redirect')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookLoginRedirect(
+    @Req()
+    req: express.Request & {
+      user: IGoogleStrategyResponse;
+    },
+    @Res() res: express.Response
+  ): Promise<any> {
+    const facebookAuthToken = await this.authService.handleSocialAuthRedirect({
+      req,
+      socialType: SocialTypeEnum.Facebook
     });
 
-    const user = await this.authService.registerUser(createUserDTO);
+    return res.status(HttpStatus.OK).json(facebookAuthToken);
+  }
 
-    const clientToken = await this.authService.handleResponseUserToken(user, clientApp);
+  @Get(':type/before-auth')
+  async socialBeforeAuth(
+    @Param('type') socialType: string,
+    @Query('clientId') clientId: string,
+    @Query('clientSecret') clientSecret: string,
+    @Res() res: express.Response
+  ) {
+    if (!clientId || !clientSecret) {
+      throw new InternalServerErrorException(AuthError.MissingClientData);
+    }
 
-    return res.status(HttpStatus.OK).json(clientToken);
+    res.cookie('clientId', clientId, { maxAge: +process.env.COMMON_COOKIE_EXPIRY });
+    res.cookie('clientSecret', clientSecret, { maxAge: +process.env.COMMON_COOKIE_EXPIRY });
+    return res.redirect(`/auth/${socialType}`);
   }
 }

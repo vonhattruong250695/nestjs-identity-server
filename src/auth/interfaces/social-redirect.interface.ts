@@ -1,4 +1,4 @@
-export class GoogleRedirectDTO {
+export class ISocialRedirectInterface {
   clientId: string;
   clientSecret: string;
 }

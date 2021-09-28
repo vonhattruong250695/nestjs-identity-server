@@ -1,5 +1,5 @@
 import { SocialTypeEnum } from '@auth/schema/social-login.schema';
-import { IGoogleStrategyResponse } from '@auth/interfaces/google-strategy-response.interface';
+import { IGoogleStrategyResponse } from '@auth/interfaces/google-auth-response.interface';
 
 export interface INewSocialLoginConstructor {
   userSocialResponse: IGoogleStrategyResponse;

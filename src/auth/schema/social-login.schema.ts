@@ -11,7 +11,7 @@ export class SocialLoginModel extends Document {
   @Prop({ type: String, enum: SocialTypeEnum })
   type: SocialTypeEnum;
 
-  @Prop({ type: String })
+  @Prop({ type: String, require: false })
   picture: string;
 
   @Prop({ type: String })

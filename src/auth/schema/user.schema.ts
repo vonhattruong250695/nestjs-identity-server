@@ -21,7 +21,7 @@ export class UserModel extends Document {
   @Exclude()
   hashRefreshToken: string;
 
-  @Prop({ type: String, unique: true })
+  @Prop({ type: String, unique: true, require: false })
   userEmail: string;
 
   @Prop({ type: String })

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { IGoogleStrategyResponse } from '@auth/interfaces/google-strategy-response.interface';
+import { IGoogleStrategyResponse } from '@auth/interfaces/google-auth-response.interface';
 import { Exclude } from 'class-transformer';
+import { IFacebookAuthResponse } from '@auth/interfaces/facebook-auth-response.interface';
 
 const example = {
   email: 'vonhattruong250695@gmail.com',
@@ -9,11 +10,18 @@ const example = {
   name: 'Vo Nhat Truong'
 };
 
-export interface IFromUserSocialResponse extends IGoogleStrategyResponse {
+export interface IFromGoogleUserResponse extends IGoogleStrategyResponse {
   clientId: string;
   clientSecret: string;
   socialObjectId: string;
 }
+
+export interface IFromFacebookUserResponse extends IFacebookAuthResponse {
+  clientId: string;
+  clientSecret: string;
+  socialObjectId: string;
+}
+
 export class RegisterDTO {
   @ApiProperty({
     example: example.email
@@ -57,7 +65,7 @@ export class RegisterDTO {
   @IsOptional()
   socialLogin: string;
 
-  fromUserSocial?(userSocialResponse: IFromUserSocialResponse): RegisterDTO {
+  fromGoogleUser?(userSocialResponse: IFromGoogleUserResponse): RegisterDTO {
     return {
       clientId: userSocialResponse.clientId,
       clientSecret: userSocialResponse.clientSecret,
@@ -66,6 +74,18 @@ export class RegisterDTO {
       password: '',
       socialLogin: userSocialResponse.socialObjectId,
       userEmail: userSocialResponse.emails[0].value
+    };
+  }
+
+  fromFacebookUser?(userSocialResponse: IFromFacebookUserResponse): RegisterDTO {
+    return {
+      clientId: userSocialResponse.clientId,
+      clientSecret: userSocialResponse.clientSecret,
+      firstName: userSocialResponse.name.givenName,
+      lastName: userSocialResponse.name.familyName,
+      password: '',
+      socialLogin: userSocialResponse.socialObjectId,
+      userEmail: userSocialResponse?.emails ? userSocialResponse?.emails[0]?.value : ''
     };
   }
 }

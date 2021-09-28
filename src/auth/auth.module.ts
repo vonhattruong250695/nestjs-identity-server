@@ -13,6 +13,7 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
 import { JwtStrategy } from '@auth/strategy/jwt.strategy';
 import { Oauth2ModelService } from '@oauth2/services/oauth2-model.service';
+import { FacebookStrategy } from '@auth/strategy/facebook.strategy';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { Oauth2ModelService } from '@oauth2/services/oauth2-model.service';
     Oauth2ModelService,
     GoogleStrategy,
     JwtStrategy,
+    FacebookStrategy,
     {
       provide: JWT_MODULE_OPTIONS,
       useValue: JwtService
